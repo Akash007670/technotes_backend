@@ -1,14 +1,23 @@
 const express = require("express");
-const app = express();
 const path = require("path");
-const PORT = process.env.PORT || 3500;
+const cors = require("cors");
 const { logger } = require("./middleware/logger");
+const errorHandler = require("./middleware/errorHandler");
+const cookieParser = require("cookie-parser");
+const corsOptions = require("./config/corsOptions");
+const PORT = process.env.PORT || 3500;
+const app = express();
 
 app.use(logger);
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
+
+//Routes
 app.use("/", express.static(path.join(__dirname, "public")));
 app.use("/", require("./routes/root"));
 
+//Trying to access page or route if not available will give page 404.
 app.all("*", (req, res) => {
   res.status(400);
 
@@ -20,5 +29,8 @@ app.all("*", (req, res) => {
     res.type("txt").send("404 Not Found");
   }
 });
+
+//Custom Middleware for errorHandling
+app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`Server Running on PORT ${PORT}`));
